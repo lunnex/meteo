@@ -11,11 +11,17 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.types import ReplyKeyboardRemove, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 import matplotlib.pyplot as plt
+import udpServer
+import climateInsideHome
+from multiprocessing import Process
 
 buttonGetInfo = KeyboardButton("Текущее состояние")
 buttonGetGraph = KeyboardButton("Получить исторические данные")
 keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
 keyboard.add(buttonGetInfo, buttonGetGraph)
+
+udpProc = Process(target=udpServer.udpGet)
+insideHomeProc = Process(target=climateInsideHome.insideHome)
 
 class States(StatesGroup):
     freeState = State()
@@ -43,6 +49,12 @@ day = "0"
 
 @dp.message_handler(commands=['start'])
 async def startCommand (message: types.Message):
+    #udpProc = Process(target=udpServer.udpGet)
+    #insideHomeProc = Process(target=climateInsideHome.insideHome)
+    udpProc.daemon = True
+    insideHomeProc.daemon = True
+    udpProc.start()
+    insideHomeProc.start()
     await message.answer("Для получения информации о состоянии окружающей среды внутри квартиры, нажми на кнопку", reply_markup=keyboard)
 
 @dp.message_handler(state = '*', text="Текущее состояние")
